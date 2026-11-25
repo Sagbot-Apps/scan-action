@@ -1,0 +1,78 @@
+name: SagBot AI-readiness scan
+description: Scan a deployed site with SagBot, fail the job when its Agent-ready or Answer-ready score drops, comment on the PR.
+author: SagBot
+branding:
+  icon: check-circle
+  color: orange
+
+inputs:
+  token:
+    description: SagBot API token (sgb_…), from a secret. Get one at https://sagbot.app/docs#token
+    required: true
+  url:
+    description: Domain or URL of the deployed site to scan, such as a preview deployment or production
+    required: true
+  baseline:
+    description: Domain whose newest stored scan is the "before" (usually production). Default the url itself
+    required: false
+    default: ""
+  site-type:
+    description: content (blog, docs, marketing), app (SaaS, web app) or shop
+    required: false
+    default: content
+  rescan:
+    description: true runs a fresh scan; false may reuse a scan from the last 60 minutes
+    required: false
+    default: "true"
+  min-agent-ready:
+    description: Fail when the Agent-ready score is below this (0-100). Empty turns it off
+    required: false
+    default: ""
+  min-answer-ready:
+    description: Fail when the Answer-ready score is below this (0-100). Empty turns it off
+    required: false
+    default: ""
+  require:
+    description: Check ids that must pass, comma, space or newline separated (such as agent-robots, seo-indexability)
+    required: false
+    default: ""
+  ignore:
+    description: Check ids never compared with the baseline. On another host than the baseline (a preview) seo-indexability, seo-canonical, seo-crawlable-links and seo-hreflang are skipped already
+    required: false
+    default: ""
+  fail-on-regression:
+    description: Fail when a check got worse than in the baseline scan
+    required: false
+    default: "true"
+  fail-on-incomplete:
+    description: Fail when SagBot couldn't fully scan the site (down, blocked, behind a login)
+    required: false
+    default: "true"
+  comment:
+    description: Post the result as one pull request comment, updated on every run
+    required: false
+    default: "true"
+  github-token:
+    description: Token for the PR comment (needs pull-requests write)
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  agent-ready:
+    description: Agent-ready score, 0-100, empty when not scored
+  answer-ready:
+    description: Answer-ready score, 0-100, empty when not scored
+  report-url:
+    description: Public report page on sagbot.app
+  scanned-at:
+    description: When the scan ran, ISO 8601 UTC
+  regressions:
+    description: Comma-separated ids of checks that got worse than in the baseline
+  fixed:
+    description: Comma-separated ids of checks fixed since the baseline
+  passed:
+    description: true when every gate passed
+
+runs:
+  using: node24
+  main: main.js
